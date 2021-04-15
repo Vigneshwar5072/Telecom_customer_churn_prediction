@@ -1,0 +1,707 @@
+---
+title: "Home-Work-2"
+author: "VigneshwarPesaru"
+date: "3/19/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+
+## R Reading Libraries
+
+```{r reading the libraries}
+	message = FALSE
+	warning = FALSE
+
+library(tidyverse) # metapackage with lots of helpful functions
+library(RColorBrewer)
+library(scales)
+library(lubridate)
+library(car)
+#options(warn=-1)
+library(AppliedPredictiveModeling)
+library(ggcorrplot)
+library(lattice)
+library(psych)
+library(DataExplorer)
+library(readxl)
+library(data.table)
+library(plotly)
+library(e1071)
+library(glmnet)
+library(caret)
+library(gridExtra)	
+library(plyr)
+#install.packages("ROCR")
+library(ROCR)
+	library(pROC)
+	library(randomForest)
+#install.packages('reticulate')
+main_churn_data = read_csv('WA_Fn-UseC_-Telco-Customer-Churn.csv')
+#The main churn data is the telecom data set
+
+
+
+```
+
+
+#Check the number of missing values in each column
+```{r}
+sapply(main_churn_data, function(x) sum(is.na(x)))
+#removing the missing values if any
+main_churn_data <- main_churn_data[complete.cases(main_churn_data), ]
+
+```
+```{r }
+
+summary(main_churn_data)
+
+
+```
+
+Description:
+
+###########################OUTCOME VARIABLE##############################
+
+The potential outcome variable in the main churn data set is the
+"churn." If the customer is already left from the service, then he/she is
+given by churn "YES" else "NO"
+
+# Summary Statistics
+  
+  Datatype : Binary (0-1)
+  churn    : Yes(Customer already left the service because of several reasons)
+  churn    : No(Customer is in the service program)
+  
+  
+########The variables invloved in the main_churn_data process are:#######
+
+1. CustomerID: This is the unique(primary key) is given to all the customers
+who are currently in the service along with the customers who already left the 
+service. This column is mainly used for east identification of any given customer.
+  
+     Datatype: character
+     Length:7032
+
+2. Gender: This column is just know the gender who are enrolled and left the telecom services
+  
+     Datatype: character
+     Gender  : Male
+     Gender  : Female
+     
+3. SeniorCitizen: This is the measurement taken to know whether the given citizen
+is a senior citizen or not.
+  
+     Datatype: Binary (0-1)
+     SeniorCitizen: 1 (if the given customer is senior citizen)
+     SeniorCitizen: 0 (if the given customer is not a senior citizen)
+
+4. Partner: Whether the customer has a partner or not (Yes, No)
+  
+     Datatype: Binary (0-1)
+     Partner: 1 (if the given customer have a partner)
+     Partner: 0 (if the given customer dont have a partner)
+
+5. Dependent: Whether the customer has a dependents or not (Yes, No)
+  
+     Datatype: Binary (0-1)
+     Partner: 1 (if the given customer have a dependent)
+     Partner: 0 (if the given customer dont have a dependent)
+
+6. Tenure:Number of months the customer has stayed with the company
+
+     Datatype: Integer (Non-negative)
+      -Min.   :1.00    
+      -1st Qu.:9.00    
+      -Median :29.00  
+      -Mean   :32.42    
+      -3rd Qu.:55.00    
+      -Max.   :73.00  
+      -Range  :[1, 72]  
+   
+        
+7. PhoneService: Whether the customer has a phone service or not (Yes, No)
+     
+     Datatype: Binary (0-1)
+     PhoneService: 1 (if the given customer have a PhoneService)
+     PhoneService: 0 (if the given customer dont have a PhoneService)
+   
+        
+8. MultipleLines : Whether the customer has multiple lines or not 
+  (Yes, No, No phone service)
+   
+     Datatype: Binary (0-1)
+     MultipleLines: 1 (if the given customer have a MultipleLines)
+     MultipleLines: 0 (if the given customer dont have a MultipleLines)
+   
+        
+9. InternetService  : Customer’s internet service provider 
+   (DSL, Fiber optic, No)
+
+     Datatype: character
+     InternetService  : DSL(if the customer have DSL)
+     InternetService  : Fiber optic(if the customer have a Fiber optic)
+     InternetService  : No(if the customer dont have any)
+     
+        
+10. OnlineSecurity  : Whether the customer has online security or not (Yes, No, No internet service)
+     
+     Datatype: Binary (0-1)
+     OnlineSecurity  : Yes (if the customer have online security)
+     OnlineSecurity  : No (if the customer dont have an online security).
+
+11. OnlineBackup  : Whether the customer has online backup or not (Yes, No, No internet service)
+     
+     Datatype: Binary (0-1)
+     OnlineBackup  : Yes (if the customer have OnlineBackup )
+     OnlineBackup  : No (if the customer dont have an OnlineBackup).
+
+12. DeviceProtection  : Whether the customer has device protection or not (Yes, No, No internet service)
+
+     Datatype: Binary (0-1)
+     DeviceProtection  : Yes (if the customer have DeviceProtection )
+     DeviceProtection  : No (if the customer dont have an DeviceProtection).
+    
+13. Techsupport  :Whether the customer has tech support or not (Yes, No, No internet service)
+
+     Datatype: Binary (0-1)
+     Techsupport  : Yes (if the customer have Techsupport )
+     Techsupport  : No (if the customer dont have an Techsupport).
+     
+14. Streaming Tv  : Whether the customer has streaming TV or not (Yes, No, No internet service)
+
+     Datatype: Binary (0-1)
+     streamingtv  : Yes (if the customer have streamingtv )
+     streamingtv  : No (if the customer dont have an streamingtv).     
+    
+    
+15. Streaming Movies  : Whether the customer has streaming movie or not (Yes, No, No internet service)
+
+     Datatype: Binary (0-1)
+     streamingMovie  : Yes (if the customer have streamingmovie )
+     streamingMovie  : No (if the customer dont have an streaming movie).      
+    
+16. Contract  : The contract term of the customer (Month-to-month, One year, Two year)
+
+     Datatype: character
+     Contract  : Month-to-month
+     Contract  : One Year
+     Contract  : Two Year
+     
+16. PaperlessBilling  : Whether the customer has paperless billing or not (Yes, No)
+
+     Datatype: Binary (0-1)
+     PaperlessBilling :  Yes (if the customer have paperless billing )
+     PaperlessBilling :  No (if the customer dont have paperless billing )
+
+
+17. MonthlyCharges:Number of months the customer has stayed with the company
+
+     Datatype: Real (Non-negative)
+      -Min.   :18.25    
+      -1st Qu.:35.59   
+      -Median :70.35  
+      -Mean   :64.80    
+      -3rd Qu.:89.86    
+      -Max.   :118.75 
+      -Range  :[18.25, 118.75]
+      
+        
+17. TotalCharges:The total amount charged to the customer
+
+     Datatype: Real (Non-negative)
+      -Min.   :18.8    
+      -1st Qu.:401.4   
+      -Median :1397.5  
+      -Mean   :2283.5    
+      -3rd Qu.:3794.7    
+      -Max.   :8684.4
+      -Range  :[18.8, 8684.4]
+
+18. Churn: Whether the customer churned or not (Yes or No)
+     
+     Datatype: Binary (0-1)
+     Churn :  Yes (if the customer churned )
+     Churn :  No (if the customer not churned )
+    
+```{r DataPreprocessing }
+message = FALSE
+warning = FALSE
+
+main_churn_data$SeniorCitizen <- as.factor(mapvalues(main_churn_data$SeniorCitizen,
+                                          from=c("0","1"),
+                                          to=c("No", "Yes")))
+
+#main_churn_data$Churn <- #as.factor(mapvalues(main_churn_data$Churn,
+#                                          from=c("No","Yes"),
+#                                          to=c("0", "1")))
+
+
+main_churn_data$MultipleLines <- as.factor(mapvalues(main_churn_data$MultipleLines, 
+                                           from=c("No phone service"),
+                                           to=c("No")))
+
+
+main_churn_data$OnlineBackup <- as.factor(mapvalues(main_churn_data$OnlineBackup, 
+                                           from=c("No internet service"),
+                                           to=c("No")))
+
+
+main_churn_data$OnlineSecurity = as.factor(mapvalues(main_churn_data$OnlineSecurity,
+                                           from=c("No internet service"),
+                                           to=c("No")))
+
+
+
+main_churn_data$DeviceProtection = as.factor(mapvalues(main_churn_data$DeviceProtection,
+                                           from=c("No internet service"),
+                                           to=c("No")))
+
+
+main_churn_data$TechSupport = as.factor(mapvalues(main_churn_data$TechSupport,
+                                           from=c("No internet service"),
+                                           to=c("No")))
+
+main_churn_data$StreamingTV = as.factor(mapvalues(main_churn_data$StreamingTV,
+                                           from=c("No internet service"),
+                                           to=c("No")))
+
+main_churn_data$StreamingMovies = as.factor(mapvalues(main_churn_data$StreamingMovies,
+                                           from=c("No internet service"),
+                                           to=c("No")))
+
+
+
+main_churn_data$customerID <- NULL
+
+temp_churn = main_churn_data
+
+
+
+library(dplyr)
+
+temp_churn <- temp_churn %>%
+mutate_if(is.factor, as.numeric)
+
+temp_churn$gender <- ifelse(temp_churn$gender == "Male",1,0)
+temp_churn$Partner <- ifelse(temp_churn$Partner == "Yes",1,0)
+temp_churn$Dependents <- ifelse(temp_churn$Dependents == "Yes",1,0)
+temp_churn$PhoneService <- ifelse(temp_churn$PhoneService == "Yes",1,0)
+temp_churn$PaperlessBilling <- ifelse(temp_churn$PaperlessBilling == "Yes",1,0)
+
+type_of_service <- c("DSL" = 1, "Fiber optic" = "2", "No" = 2)
+
+Internetservice <- factor(unname(type_of_service[temp_churn$InternetService]))
+
+temp_churn$InternetService = NULL
+
+temp_churn$Contract =  NULL
+
+temp_churn$PaymentMethod =  NULL
+
+temp_churn = cbind(Internetservice, temp_churn)
+
+```   
+   
+```{r skewness and density of the outcome variable  }
+#Gender plot
+p1 <- ggplot(main_churn_data, aes(x = gender)) +
+  geom_bar() +
+  geom_text(aes(y = ..count.. -200, 
+                label = paste0(round(prop.table(..count..),4) * 100, '%')), 
+            stat = 'count', 
+            position = position_dodge(.1), 
+            size = 3)
+
+#Senior citizen plot
+p2 <- ggplot(main_churn_data, aes(x = SeniorCitizen)) +
+  geom_bar() +
+  geom_text(aes(y = ..count.. -200, 
+                label = paste0(round(prop.table(..count..),4) * 100, '%')), 
+            stat = 'count', 
+            position = position_dodge(.1), 
+            size = 3)
+
+#Partner plot
+p3 <- ggplot(main_churn_data, aes(x = Partner)) +
+  geom_bar() +
+  geom_text(aes(y = ..count.. -200, 
+                label = paste0(round(prop.table(..count..),4) * 100, '%')), 
+            stat = 'count', 
+            position = position_dodge(.1), 
+            size = 3)
+
+#Dependents plot
+p4 <- ggplot(main_churn_data, aes(x = Dependents)) +
+  geom_bar() +
+  geom_text(aes(y = ..count.. -200, 
+                label = paste0(round(prop.table(..count..),4) * 100, '%')), 
+            stat = 'count', 
+            position = position_dodge(.1), 
+            size = 3)
+
+#Plot demographic data within a grid
+
+grid.arrange(p1, p2, p3, p4, ncol=2)
+
+```
+
+
+   
+   
+
+```{r }
+message = FALSE
+warning = FALSE
+#Phone service plot
+p5 <- ggplot(main_churn_data, aes(x = PhoneService)) +
+  geom_bar() +
+  geom_text(aes(y = ..count.. -200, 
+                label = paste0(round(prop.table(..count..),4) * 100, '%')), 
+            stat = 'count', 
+            position = position_dodge(.1), 
+            size = 3)
+
+#Multiple phone lines plot
+p6 <- ggplot(main_churn_data, aes(x = MultipleLines)) +
+  geom_bar() +
+  geom_text(aes(y = ..count.. -200, 
+                label = paste0(round(prop.table(..count..),4) * 100, '%')), 
+            stat = 'count', 
+            position = position_dodge(.1), 
+            size = 3)
+
+#Internet service plot
+p7 <- ggplot(main_churn_data, aes(x = InternetService)) +
+  geom_bar() +
+  geom_text(aes(y = ..count.. -200, 
+                label = paste0(round(prop.table(..count..),4) * 100, '%')), 
+            stat = 'count', 
+            position = position_dodge(.1), 
+            size = 3)
+
+#Online security service plot
+p8 <- ggplot(main_churn_data, aes(x = OnlineSecurity)) +
+  geom_bar() +
+  geom_text(aes(y = ..count.. -200, 
+                label = paste0(round(prop.table(..count..),4) * 100, '%')), 
+            stat = 'count', 
+            position = position_dodge(.1), 
+            size = 3)
+
+#Online backup service plot
+p9 <- ggplot(main_churn_data, aes(x = OnlineBackup)) +
+  geom_bar() +
+  geom_text(aes(y = ..count.. -200, 
+                label = paste0(round(prop.table(..count..),4) * 100, '%')), 
+            stat = 'count', 
+            position = position_dodge(.1), 
+            size = 3)
+
+#Device Protection service plot
+p10 <- ggplot(main_churn_data, aes(x = DeviceProtection)) +
+  geom_bar() +
+  geom_text(aes(y = ..count.. -200, 
+                label = paste0(round(prop.table(..count..),4) * 100, '%')), 
+            stat = 'count', 
+            position = position_dodge(.1), 
+            size = 3)
+
+#Tech Support service plot
+p11 <- ggplot(main_churn_data, aes(x = TechSupport)) +
+  geom_bar() +
+  geom_text(aes(y = ..count.. -200, 
+                label = paste0(round(prop.table(..count..),4) * 100, '%')), 
+            stat = 'count', 
+            position = position_dodge(.1), 
+            size = 3)
+
+#Streaming TV service plot
+p12 <- ggplot(main_churn_data, aes(x = StreamingTV)) +
+  geom_bar() +
+  geom_text(aes(y = ..count.. -200, 
+                label = paste0(round(prop.table(..count..),4) * 100, '%')), 
+            stat = 'count', 
+            position = position_dodge(.1), 
+            size = 3)
+
+#Streaming Movies service plot
+p13 <- ggplot(main_churn_data, aes(x = StreamingMovies)) +
+  geom_bar() +
+  geom_text(aes(y = ..count.. -200, 
+                label = paste0(round(prop.table(..count..),4) * 100, '%')), 
+            stat = 'count', 
+            position = position_dodge(.1), 
+            size = 3)
+
+#Plot service data within a grid
+grid.arrange(p5, p6, p7,
+             p8, p9, p10,
+             p11, p12, p13,
+             ncol=3)
+
+```
+
+
+```{r }
+
+par(mfrow=c(2,2))
+## if you save your hist() , it actually stores each bin count,midpoint of each stack,the density of each stack , etc..
+## can use text fucntion to add text to plots
+b<-hist(main_churn_data$tenure,xlim=c(0,80),breaks=10,main='Tenure freq histo',ylab='freq',xlab='Tenure',col=2)
+text(b$mids,b$counts,labels=b$counts, adj=c(0.5, 1))
+
+e<-hist(main_churn_data$TotalCharges,xlim=c(0,10000),breaks=8,main='Total Charges freq histo',ylab='freq',xlab='Total Charges',col=3 )
+text(e$mids,e$counts,labels=e$counts, adj=c(0.5,1))
+
+t<-hist(main_churn_data$MonthlyCharges,xlim=c(0,120),breaks=8, main='Monthly charges freq histo',ylab='freq',xlab='Monthly charges',col=5)
+text(t$mids,t$counts,labels=t$counts, adj=c(0.5, 1))
+
+
+```
+```{r }
+p20 <- ggplot(main_churn_data, aes(x = Churn)) +
+  geom_bar() +
+  geom_text(aes(y = ..count.. -200, 
+                label = paste0(round(prop.table(..count..),4) * 100, '%')), 
+            stat = 'count', 
+            position = position_dodge(.1), 
+            size = 3)
+p20
+```
+
+```{r }
+message = FALSE
+warning = FALSE
+set.seed(123)
+
+
+training.samples <- temp_churn$Churn %>%
+  createDataPartition(p = 0.8, list = FALSE)
+
+train.data  <- temp_churn[training.samples, ]
+test.data <- temp_churn[-training.samples, ]
+
+
+
+
+lda_model <- train(Churn ~., data = train.data,
+                 method = "lda", 
+                 trControl = trainControl("cv", number = 10), 
+                 metric = "Spec")
+
+lda_pred <- predict(lda_model, test.data)
+confusionMatrix(lda_pred, as.factor(test.data$Churn), positive = "No")
+
+
+probs <- predict(lda_model, test.data,
+type = "prob")[, "No"]
+
+
+
+test.data$Churn = ifelse(test.data$Churn == "Yes", 1, 0)
+
+#plot(roc(test.data$Churn, lda_pred$posterior[,"1"], direction="<"),
+#     col="yellow", lwd=3, main="The turtle finds its way")
+
+roc_lda=roc(response=test.data$Churn, predictor= factor(probs, 
+ordered = TRUE), plot=TRUE)
+plot(roc_lda, col="red", lwd=3, main="ROC curve LDA",asp = NA)
+auc_lda<-auc(roc_lda)
+
+
+
+
+```
+
+
+
+
+
+```{r Random Forest}
+# Fit the model on the training set
+ctrl = trainControl(method = "cv", number=10, 
+                classProbs = TRUE, summaryFunction = twoClassSummary)
+
+model.rf = train(Churn ~., data = train.data ,
+                         method = "rf",
+                         ntree = 75,
+                         tuneLength = 5,
+                         metric = "ROC",
+                         trControl = ctrl)
+        
+
+model.rf
+
+rf_pred <- predict(model.rf, test.data)
+confusionMatrix(rf_pred, as.factor(test.data$Churn), positive = "No")
+
+rf_probs <- predict(model.rf, test.data,
+type = "prob")[, "No"]
+
+
+
+roc_rf=roc(response=test.data$Churn, predictor= factor(rf_probs, 
+ordered = TRUE), plot=TRUE)
+plot(roc_rf, col="red", lwd=3, main="ROC curve RF",asp = NA)
+auc_lda<-auc(roc_rf)
+
+
+```
+
+```{r naive bayes model}
+# Fit the model on the training set
+ctrl = trainControl(method = "cv", number=10, 
+                classProbs = TRUE, summaryFunction = twoClassSummary)
+
+model.nb = train(Churn ~., data = train.data ,
+                         method = "nb",
+                         trControl = ctrl)
+        
+
+model.nb
+
+nb_pred <- predict(model.nb, test.data)
+confusionMatrix(nb_pred, as.factor(test.data$Churn), positive = "No")
+
+nb_probs <- predict(model.nb, test.data,
+type = "prob")[, "No"]
+
+
+
+roc_nb=roc(response=test.data$Churn, predictor= factor(nb_probs, 
+ordered = TRUE), plot=TRUE)
+plot(roc_nb, col="red", lwd=3, main="ROC curve RF",asp = NA)
+auc_nb<-auc(roc_nb)
+
+
+```
+
+# Comparing the models with repect to RMSE and Model compexities.
+
+
+
+1. Linear Model:
+
+    In the case of Linear regression model the estimated RSME is 1.21.
+
+2. LASSO Model:
+
+    2.1.   In the case of LASSO model the estimated RSME is 1.18, 
+    
+    2.2.  From the graph of "Fraction of Full solution" we can observe the following:
+   
+    2.3:  RMSE value started decreasing as the Fraction of Full solution increases
+          
+   
+         Fraction Full Solution is give by:
+         
+           * (LASSO Solution)/(Linear regression Solution)
+           
+        Note: Ultimately between both the models(Linear and LASSO) the LASSO performed
+        well but during the starting phase of iterations from the graph the LASSO 
+        performed poor compared to the Linear regression model.
+
+3. Regression Tree:
+
+    3.1. The estimated RSME value in the case of regression Tree is 1.86. 
+    
+    3.2. Clearly from the regression tree estimated RMSE value, we can conclude that regression
+         trees performed very poor compared to rest of the models.
+        
+    3.2. This could probably the regression trees are overfitting the data by
+         splitting the predictors space in illogical way. Hence we end up with
+         higher estimated RSME.
+         
+    3.3. From the graph, we can clearly seen that as the complexity parameter(cp)
+         increases the RSME values started increasing. 
+         
+         Note: Although the model has considered the optimal cp value for which 
+         the RSME value is low but on the test set it has performed very poor.
+         
+         Hence we can drop the idea of implementing the Regression Tree model 
+         for this Data set. 
+         
+4. Neural Network:
+
+    4.1 Simple Neural Network:
+    
+        * The estimated  Training RMSE value for the simple Neural Network is
+          1.10 which is lower than the test estimated RMSE which is 2.10.
+          
+          Clearly the simple neural networks has overfitted our model.  
+        
+    Lets see how we have fixed the overfitted simple neural network.    
+        
+    4.2 Averaging Neural Network:
+    
+        * The estimated RMSE value for the Averaging Neural Network is 0.96 which 
+        is lower than the rest of the models.
+        
+        * The primary reason why the averaging neural network worked out well 
+          when compared to simple neural network is because initialization step 
+          in Neural Network plays a impactful role in prediction.
+          
+        * In the case of averaging, we choose three random initializations, then
+          we try to fit the model based on each initialization by calling 
+          f1(x), f2(x), f3(x).
+          
+        * Based on this we try to predict for 1/3*(f1(x)+f2(x)+f3(x)), in this
+          way we can escape from overfitting.
+          
+     
+     Therefore, till here we can say that:
+      
+      RMSE(AverageNeuralNet) << RMSE(LASSO) << RMSE(Linear Regression) << RMSE(Regression Tree)
+      
+      
+      
+5. Support Vector Mission(SVM):
+
+      5.1. The estimate RSME value with the SVM is low compared to Neural Network.
+      
+      5.2. The cost or loss function is chosen to be 8 for this data, which is optimal.
+           The loss function really helped in improving the model by reducing the overall RMSE to a very lower number.
+           
+      5.3. Although this is a slight overfit model, but this model has performed
+           well when compared to Average Neural Network.
+           
+           
+Conclusion:
+           
+     * Hence out of all the models, based on the RMSE and complexity, we can 
+     now conclude that SVM out performed when compared to rest of the models.
+     
+     
+      RMSE(SVM) << RMSE(AverageNeuralNet) << RMSE(LASSO) << RMSE(Linear Regression) << RMSE(Regression Tree)
+      
+      
+      
+
+
+        
+         
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
