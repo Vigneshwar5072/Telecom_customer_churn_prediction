@@ -495,9 +495,9 @@ test.data <- temp_churn[-training.samples, ]
 
 
 lda_model <- train(Churn ~., data = train.data,
-                 method = "lda", 
-                 trControl = trainControl("cv", number = 10), 
-                 metric = "Spec")
+                 method = "glm", 
+                 trControl = trainControl("cv", number = 10, classProbs = TRUE,summaryFunction=twoClassSummary), 
+                 metric = "ROC")
 
 lda_pred <- predict(lda_model, test.data)
 confusionMatrix(lda_pred, as.factor(test.data$Churn), positive = "No")
@@ -515,12 +515,48 @@ test.data$Churn = ifelse(test.data$Churn == "Yes", 1, 0)
 
 roc_lda=roc(response=test.data$Churn, predictor= factor(probs, 
 ordered = TRUE), plot=TRUE)
-plot(roc_lda, col="red", lwd=3, main="ROC curve LDA",asp = NA)
-auc_lda<-auc(roc_lda)
+plot(roc_lda, col="red", lwd=3, main="ROC curve Logistic",asp = NA)
+#auc_lda<-auc(roc_lda,"auc")
+
+```
 
 
 
+```{r Penalized model }
 
+
+set.seed(100)
+ctrl2 <- trainControl(method = "cv", number = 10,
+# extra lines required for ROC
+classProbs = TRUE,
+summaryFunction=twoClassSummary)
+set.seed(100)
+glmnGrid <- expand.grid(lambda = seq(0.0, 0.02, length = 10),
+alpha = seq(0.0, 1, length = 10))
+glmnTuned2 <- train(Churn ~ .,
+                    data = train.data,
+                    method = "glmnet",
+                    tuneGrid = glmnGrid,
+                    preProc = c("center", "scale"),
+                    metric="ROC", # Switch metric
+                    trControl = ctrl2)
+
+glmnTuned2$results %>% filter(alpha == glmnTuned2$bestTune$alpha,
+lambda == glmnTuned2$bestTune$lambda)
+
+test.data$Churn = ifelse(test.data$Churn == "1", "Yes", "No")
+glmnTuned2_pred <- predict(glmnTuned2, test.data)
+confusionMatrix(glmnTuned2_pred, as.factor(test.data$Churn), positive = "No")
+
+
+probs <- predict(glmnTuned2, test.data,
+type = "prob")[, "No"]
+
+
+
+roc_glmTuned2=roc(response=test.data$Churn, predictor= factor(probs, 
+ordered = TRUE), plot=TRUE)
+plot(roc_glmTuned2, col="red", lwd=3, main="ROC curve Penalized",asp = NA)
 ```
 
 
@@ -543,17 +579,18 @@ model.rf = train(Churn ~., data = train.data ,
 model.rf
 
 rf_pred <- predict(model.rf, test.data)
-confusionMatrix(rf_pred, as.factor(test.data$Churn), positive = "No")
+
+#confusionMatrix(rf_pred, as.factor(test.data$Churn), positive = "No")
 
 rf_probs <- predict(model.rf, test.data,
 type = "prob")[, "No"]
 
-
+confusionMatrix(rf_pred, as.factor(test.data$Churn), positive = "No")
 
 roc_rf=roc(response=test.data$Churn, predictor= factor(rf_probs, 
 ordered = TRUE), plot=TRUE)
 plot(roc_rf, col="red", lwd=3, main="ROC curve RF",asp = NA)
-auc_lda<-auc(roc_rf)
+#auc_lda<-auc(roc_rf)
 
 
 ```
@@ -571,7 +608,7 @@ model.nb = train(Churn ~., data = train.data ,
 model.nb
 
 nb_pred <- predict(model.nb, test.data)
-confusionMatrix(nb_pred, as.factor(test.data$Churn), positive = "No")
+#confusionMatrix(nb_pred, as.factor(test.data$Churn), positive = "No")
 
 nb_probs <- predict(model.nb, test.data,
 type = "prob")[, "No"]
@@ -580,8 +617,8 @@ type = "prob")[, "No"]
 
 roc_nb=roc(response=test.data$Churn, predictor= factor(nb_probs, 
 ordered = TRUE), plot=TRUE)
-plot(roc_nb, col="red", lwd=3, main="ROC curve RF",asp = NA)
-auc_nb<-auc(roc_nb)
+plot(roc_nb, col="red", lwd=3, main="ROC curve Naive",asp = NA)
+#auc_nb<-auc(roc_nb)
 
 
 ```
